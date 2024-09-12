@@ -4,6 +4,17 @@ import fragmentShaderSource from './shader.frag';
 const canvas = document.querySelector('.canvas-container');
 const gl = canvas.getContext('webgl');
 
+// 定数の定義
+const CLEAR_COLOR = [0.0, 0.0, 0.0, 1.0]; // 背景色（黒）
+const NUM_COMPONENTS_POSITION = 2; // 位置データのコンポーネント数 (x, y)
+const NUM_COMPONENTS_COLOR = 3; // 色データのコンポーネント数 (r, g, b)
+const NUM_TOTAL_COMPONENTS = NUM_COMPONENTS_POSITION + NUM_COMPONENTS_COLOR; // 頂点ごとのデータ数
+const FLOAT_SIZE = Float32Array.BYTES_PER_ELEMENT; // 1つのFLOATのバイト数
+const STRIDE = NUM_TOTAL_COMPONENTS * FLOAT_SIZE; // ストライドの計算
+const OFFSET_POSITION = 0; // 位置データの開始オフセット
+const OFFSET_COLOR = NUM_COMPONENTS_POSITION * FLOAT_SIZE; // 色データの開始オフセット
+const NUM_VERTICES = 3; // 描画する頂点数（3つの頂点で三角形）
+
 // canvasのリサイズ処理
 const resizeCanvas = () => {
   canvas.width = window.innerWidth;
@@ -43,7 +54,6 @@ const createProgram = (gl, vertexShader, fragmentShader) => {
 const program = createProgram(gl, vertexShader, fragmentShader);
 
 // 頂点データの定義
-// 頂点データ
 const vertexData = new Float32Array([
   // 位置 (x, y) と 色 (r, g, b)
   0.0,
@@ -68,18 +78,15 @@ const vbo = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-// ストライドを計算 (位置2つ + 色3つ = 5つのFLOAT)
-const stride = 5 * Float32Array.BYTES_PER_ELEMENT; // 5つのデータ（20バイト）
-
 // 頂点属性の設定 (位置は最初の2つのFLOATデータから)
 const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
 gl.vertexAttribPointer(
   positionAttributeLocation,
-  2,
+  NUM_COMPONENTS_POSITION,
   gl.FLOAT,
   false,
-  stride,
-  0
+  STRIDE,
+  OFFSET_POSITION
 );
 gl.enableVertexAttribArray(positionAttributeLocation);
 
@@ -87,15 +94,15 @@ gl.enableVertexAttribArray(positionAttributeLocation);
 const colorAttributeLocation = gl.getAttribLocation(program, 'a_color');
 gl.vertexAttribPointer(
   colorAttributeLocation,
-  3,
+  NUM_COMPONENTS_COLOR,
   gl.FLOAT,
   false,
-  stride,
-  2 * Float32Array.BYTES_PER_ELEMENT
+  STRIDE,
+  OFFSET_COLOR
 );
 gl.enableVertexAttribArray(colorAttributeLocation);
 
 // 画面をクリアして三角形を描画
-gl.clearColor(0.0, 0.0, 0.0, 1.0); // 背景を黒に設定
+gl.clearColor(...CLEAR_COLOR); // 背景を設定した色でクリア
 gl.clear(gl.COLOR_BUFFER_BIT);
-gl.drawArrays(gl.TRIANGLES, 0, 3);
+gl.drawArrays(gl.TRIANGLES, 0, NUM_VERTICES);
